@@ -1,7 +1,8 @@
 from decimal import Decimal
 from pydantic import BaseModel, Field
-from app.models.sale import PaymentMethod
 from datetime import datetime
+
+from app.models.sale import PaymentMethod
 
 class SaleItemCreate(BaseModel):
     product_id: int

@@ -69,5 +69,4 @@ def report(
     if start and end:
         if start > end:
             raise HTTPException(400, detail="Horário de início acima do fim")
-    # TODO: retorne cash_service.get_report(session, start, end, group_by)
     return cash_service.get_report(session,start, end, group_by)

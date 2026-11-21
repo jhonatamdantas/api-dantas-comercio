@@ -1,8 +1,9 @@
 from pydantic import Field, BaseModel
 from decimal import Decimal
+from datetime import datetime
+
 from app.schemas.sale import SaleRead
 from app.models.sale import PaymentMethod
-from datetime import datetime
 
 class FiadoPaymentCreate(BaseModel):
     client_id: int

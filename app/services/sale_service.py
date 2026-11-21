@@ -10,14 +10,10 @@ from app.models.cash import EntryType, CashEntry
 from app.models.sale import PaymentMethod
 
 def register_sale(session: Session, data: SaleCreate) -> Sale:
-    # TODO (antes do loop, junto da validação do cliente):
-    #   se data.payment_method == PaymentMethod.credit e data.client_id for None
-    #   -> 400 "Venda no fiado exige cliente"
     if data.payment_method == PaymentMethod.credit and data.client_id is None:
         raise HTTPException(status_code=400, detail="Venda no fiado exige cliente")
     
 
-    # 1. Valida o cliente só se foi informado (venda de balcão pode não ter)
     if data.client_id is not None:
         client = session.get(Client, data.client_id)
 
@@ -26,13 +22,11 @@ def register_sale(session: Session, data: SaleCreate) -> Sale:
         if not client.active:
             raise HTTPException(status_code=400, detail="Cliente inativo")
 
-    # 2. Agrupa itens repetidos somando as quantidades
     items: dict[int, int] = {}
     for item in data.items:
         # get devolve 0 se o produto ainda não estiver no dicionário
         items[item.product_id] = items.get(item.product_id, 0) + item.quantity
 
-    # 3. Valida cada produto, baixa o estoque e monta os itens (sem salvar ainda)
     total = Decimal("0")
     sale_items: list[ItemSale] = []
 
@@ -56,7 +50,6 @@ def register_sale(session: Session, data: SaleCreate) -> Sale:
 
         product.stock -= quantity
 
-        # unit_price é o preço de 1 unidade, congelado no momento da venda
         sale_items.append(
             ItemSale(
                 product_id=product_id,
@@ -65,7 +58,6 @@ def register_sale(session: Session, data: SaleCreate) -> Sale:
             )
         )
 
-        # O subtotal da linha (preço x quantidade) entra só no total
         total += product.price * quantity
     if data.payment_method == PaymentMethod.credit:
         if client.pending_value + total > client.credit_client:
@@ -73,7 +65,6 @@ def register_sale(session: Session, data: SaleCreate) -> Sale:
         client.pending_value += total
 
 
-    # 4. Cria a venda com o total e usa flush para gerar o sale.id sem confirmar
     sale = Sale(
         client_id=data.client_id,
         payment_method=data.payment_method,
@@ -82,12 +73,10 @@ def register_sale(session: Session, data: SaleCreate) -> Sale:
     session.add(sale)
     session.flush()
 
-    # 5. Agora o id existe: liga os itens à venda
     for sale_item in sale_items:
         sale_item.sale_id = sale.id
         session.add(sale_item)
 
-    # 6. Lança a entrada no caixa (sem commit dentro do service)
     if data.payment_method != PaymentMethod.credit:
         cash_service.register_entry(
             session,
@@ -97,7 +86,6 @@ def register_sale(session: Session, data: SaleCreate) -> Sale:
             sale_id=sale.id,
         )
 
-    # 7. Commit único: ou tudo é salvo, ou nada
     session.commit()
     session.refresh(sale)
     return sale

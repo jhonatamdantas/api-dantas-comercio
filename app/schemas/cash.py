@@ -1,8 +1,9 @@
 from pydantic import BaseModel
-from app.models.cash import EntryType
+from datetime import datetime, timezone, date
 from decimal import Decimal
 from sqlmodel import Field
-from datetime import datetime, timezone, date
+
+from app.models.cash import EntryType
 
 class CashEntryCreate(BaseModel):
     type: EntryType
