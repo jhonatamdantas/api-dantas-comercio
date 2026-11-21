@@ -1,5 +1,6 @@
 from getpass import getpass
 from sqlmodel import Session, select
+
 from app.db.session import engine, create_table
 from app.models import user
 from app.models.user import Role
