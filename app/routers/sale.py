@@ -30,6 +30,7 @@ def get_sale(sale_id: int, session: Session = Depends(get_session)):
     sale = session.get(Sale, sale_id)
     if sale is None:
         raise HTTPException(status_code=404, detail="Venda não encontrada")
+    return sale
 
 
 @router.post("/{sale_id}/cancel", response_model=SaleRead)

@@ -20,6 +20,7 @@ class SaleItemRead(BaseModel):
     model_config = {"from_attributes": True}
 
 class SaleRead(BaseModel):
+    id: int
     client_id: int | None = None
     payment_method: PaymentMethod
     total: Decimal
